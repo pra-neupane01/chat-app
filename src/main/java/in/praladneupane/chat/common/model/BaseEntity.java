@@ -23,10 +23,9 @@ public abstract class BaseEntity {
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(updatable = true)
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(updatable = false)
     private LocalDateTime deletedAt;
 
 
