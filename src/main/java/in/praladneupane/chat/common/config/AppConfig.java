@@ -11,4 +11,11 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 public class AppConfig {
     private Jwt jwt = new Jwt();
+
+    @Getter
+    @Setter
+    public static class Jwt{
+        private String secret;
+        private String expiry;
+    }
 }
