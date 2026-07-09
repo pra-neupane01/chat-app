@@ -22,6 +22,6 @@ server:
 app:
   jwt:
     secret: "bXktc3VwZXItc2VjcmV0LWtleS1teS1zdXBlci1zZWNyZXQta2V5LTEyMzQ1Ng=="
-    expiry: 1440
+    expiry: 60
 
 

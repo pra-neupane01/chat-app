@@ -16,6 +16,6 @@ public class AppConfig {
     @Setter
     public static class Jwt{
         private String secret;
-        private String expiry;
+        private Long expiry;
     }
 }

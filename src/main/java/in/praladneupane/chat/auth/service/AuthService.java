@@ -3,6 +3,8 @@ package in.praladneupane.chat.auth.service;
 import in.praladneupane.chat.auth.dto.request.LoginRequest;
 import in.praladneupane.chat.auth.dto.request.RegisterRequest;
 import in.praladneupane.chat.auth.dto.response.AuthResponse;
+import in.praladneupane.chat.auth.security.UserPrincipal;
+import in.praladneupane.chat.auth.security.jwt.JwtService;
 import in.praladneupane.chat.common.exception.BusinessException;
 import in.praladneupane.chat.user.dto.response.UserResponse;
 import in.praladneupane.chat.user.mapper.UserMapper;
@@ -21,6 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
     public UserResponse registerUser(RegisterRequest request){
         checkUserExists(request);
@@ -37,6 +40,17 @@ public class AuthService {
     }
 
     public AuthResponse loginUser(LoginRequest request){
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()))
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+        String jwt = jwtService.generateToken(userPrincipal);
+
+return AuthResponse.builder()
+        .token(jwt)
+        .userId(userPrincipal.getId())
+        .fullName(userPrincipal.getFullName())
+        .email(userPrincipal.getEmail())
+        .build();
     }
 }
