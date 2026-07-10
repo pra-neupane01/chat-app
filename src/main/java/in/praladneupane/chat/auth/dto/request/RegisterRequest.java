@@ -7,6 +7,9 @@ public record RegisterRequest(
         @NotBlank(message = "Full name is required")
         String fullName,
 
+        @NotBlank(message = "User name is required")
+        String userName,
+
         @NotBlank(message = "Email is required")
         @Email(message = "Invalid Email")
         String email,

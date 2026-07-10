@@ -29,6 +29,9 @@ public class User extends BaseEntity {
     @Column(name = "profile_image")
     private String profileImage;
 
+    @Column(name="username", nullable = false, unique = true)
+    private String username;
+
     @Builder.Default
     @Column(nullable = false, name = "online_status")
     private Boolean onlineStatus = false;

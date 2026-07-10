@@ -9,6 +9,7 @@ import java.util.UUID;
 public record UserResponse(
         UUID id,
         String fullName,
+        String userName,
         String email,
         String profileImage,
         Boolean onlineStatus,
