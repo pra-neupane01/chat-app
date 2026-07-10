@@ -6,13 +6,12 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Builder
-public record UserResponse(
+public record UserSearchResponse(
         UUID id,
         String fullName,
         String userName,
-        String email,
         String profileImage,
         Boolean onlineStatus,
-        LocalDateTime lastSeenAt,
-        LocalDateTime createdAt) {
+        LocalDateTime lastSeenAt
+) {
 }

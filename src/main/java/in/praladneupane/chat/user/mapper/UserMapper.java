@@ -9,19 +9,19 @@ public class UserMapper {
         return User.builder()
                 .fullName(request.fullName())
                 .email(request.email())
+                .username(request.userName())
                 .build();
-
     }
 
     public static UserResponse toResponse(User user){
         return UserResponse.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
+                .userName(user.getUsername())
                 .email(user.getEmail())
                 .createdAt(user.getCreatedAt())
                 .onlineStatus(user.getOnlineStatus())
                 .lastSeenAt(user.getLastSeenAt())
                 .build();
-
     }
 }
