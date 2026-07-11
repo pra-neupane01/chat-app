@@ -4,7 +4,7 @@ import in.praladneupane.chat.auth.dto.request.LoginRequest;
 import in.praladneupane.chat.auth.dto.request.RegisterRequest;
 import in.praladneupane.chat.auth.dto.response.AuthResponse;
 import in.praladneupane.chat.auth.service.AuthService;
-import in.praladneupane.chat.common.response.APIResponse;
+import in.praladneupane.chat.common.dto.response.APIResponse;
 import in.praladneupane.chat.user.dto.response.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

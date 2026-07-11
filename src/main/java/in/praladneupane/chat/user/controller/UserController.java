@@ -1,13 +1,12 @@
 package in.praladneupane.chat.user.controller;
 
-import in.praladneupane.chat.common.response.APIResponse;
+import in.praladneupane.chat.common.dto.request.response.APIResponse;
 import in.praladneupane.chat.user.dto.request.UserSearchRequest;
 import in.praladneupane.chat.user.dto.response.UserSearchResponse;
 import in.praladneupane.chat.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
