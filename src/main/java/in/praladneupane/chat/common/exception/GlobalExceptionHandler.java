@@ -2,7 +2,7 @@ package in.praladneupane.chat.common.exception;
 
 
 
-import in.praladneupane.chat.common.response.APIResponse;
+import in.praladneupane.chat.common.dto.request.response.APIResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

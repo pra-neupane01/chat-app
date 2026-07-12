@@ -1,7 +1,7 @@
 package in.praladneupane.chat.auth.security.config;
 
 import in.praladneupane.chat.auth.security.jwt.JwtAuthenticationFilter;
-import in.praladneupane.chat.common.response.APIResponse;
+import in.praladneupane.chat.common.dto.request.response.APIResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

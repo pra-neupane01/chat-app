@@ -1,4 +1,4 @@
-package in.praladneupane.chat.common.response;
+package in.praladneupane.chat.common.dto.response;
 
 import lombok.*;
 
