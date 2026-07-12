@@ -3,7 +3,7 @@ package in.praladneupane.chat.chat.controller;
 import in.praladneupane.chat.auth.security.UserPrincipal;
 import in.praladneupane.chat.chat.dto.response.ConversationResponse;
 import in.praladneupane.chat.chat.service.ConversationService;
-import in.praladneupane.chat.common.dto.request.response.APIResponse;
+import in.praladneupane.chat.common.dto.response.APIResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,4 +36,6 @@ public class ConversationController {
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    public ResponseEntity<APIResponse<>>
 }
