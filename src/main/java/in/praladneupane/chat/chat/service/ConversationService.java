@@ -55,11 +55,17 @@ public class ConversationService {
     }
 
 
-    @Transactional
-    public Page<ConversationResponse> getAllConversations(Pageable pageable){
-        Page<Conversation> conversationPage = conversationRepository.findAll(pageable);
+    @Transactional(readOnly = true)
+    public Page<ConversationResponse> getAllConversations(UUID authenticatedUserId,
+                                                          Pageable pageable){
 
+        Page<Conversation> conversationPage = conversationRepository.findByUserOneIdOrUserTwoId(authenticatedUserId, authenticatedUserId, pageable);
+        return conversationPage.map(conversation -> {
+            User otherUser = conversation.getUserOne().getId().equals(authenticatedUserId)
+                    ? conversation.getUserTwo()
+                    : conversation.getUserOne();
 
-
+            return ConversationMapper.toResponse(conversation, otherUser);
+        });
     }
 }
