@@ -3,8 +3,6 @@ package in.praladneupane.chat.chat.model;
 import in.praladneupane.chat.common.model.BaseEntity;
 import in.praladneupane.chat.user.model.User;
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.Fetch;
-import jdk.jfr.Timestamp;
 import lombok.*;
 
 import java.time.LocalDateTime;
