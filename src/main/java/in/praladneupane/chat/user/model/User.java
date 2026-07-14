@@ -36,6 +36,6 @@ public class User extends BaseEntity {
     @Column(nullable = false, name = "online_status")
     private Boolean onlineStatus = false;
 
-    @Column(nullable = false, name = "last_seen_at")
+    @Column(name = "last_seen_at")
     private LocalDateTime lastSeenAt;
 }

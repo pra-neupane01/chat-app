@@ -6,7 +6,6 @@ import in.praladneupane.chat.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
-@RequiredArgsConstructor
 public class UserSpecification {
     public static Specification<User> search(UserSearchRequest request) {
         return (root, query, cb) -> {
