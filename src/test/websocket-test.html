@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat WebSocket Test</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs/bundles/stomp.umd.min.js"></script>
+</head>
+
+<body>
+
+<h2>WebSocket Chat Test</h2>
+
+<label>JWT Token</label><br>
+<textarea cols="80" id="token" rows="4"></textarea><br><br>
+
+<label>Conversation ID</label><br>
+<input id="conversationId" size="50"><br><br>
+
+<label>Receiver ID</label><br>
+<input id="receiverId" size="50"><br><br>
+
+<label>Message</label><br>
+<input id="content" size="50" value="Hello from WebSocket"><br><br>
+
+<button onclick="connect()">Connect</button>
+<button onclick="sendMessage()">Send message</button>
+<button onclick="disconnect()">Disconnect</button>
+
+<h3>Status</h3>
+<pre id="status">Not connected</pre>
+
+<h3>Received messages</h3>
+<pre id="messages"></pre>
+
+<script>
+    let stompClient = null;
+
+    function connect() {
+        const token =
+            document.getElementById("token").value.trim();
+
+        const conversationId =
+            document.getElementById("conversationId").value.trim();
+
+        if (!token) {
+            showStatus("JWT token is required");
+            return;
+        }
+
+        if (!conversationId) {
+            showStatus("Conversation ID is required");
+            return;
+        }
+
+        showStatus("Connecting...");
+
+        stompClient = new StompJs.Client({
+            webSocketFactory: () =>
+                new SockJS("http://localhost:8082/api/v1/ws"),
+
+            connectHeaders: {
+                Authorization: "Bearer " + token
+            },
+
+            reconnectDelay: 5000,
+
+            debug: message => {
+                console.log("[STOMP]", message);
+            },
+
+            onConnect: frame => {
+                console.log("Connected frame:", frame);
+
+                showStatus(
+                    "Connected successfully\n" +
+                    `Subscribed to /topic/conversations/${conversationId}`
+                );
+
+                stompClient.subscribe(
+                    `/topic/conversations/${conversationId}`,
+                    frame => {
+                        const receivedMessage =
+                            JSON.parse(frame.body);
+
+                        document.getElementById("messages")
+                            .textContent +=
+                            JSON.stringify(receivedMessage, null, 2)
+                            + "\n\n";
+                    }
+                );
+            },
+
+            onStompError: frame => {
+                console.error("STOMP error:", frame);
+
+                showStatus(
+                    "STOMP error:\n" +
+                    (frame.headers["message"] || "") +
+                    "\n" +
+                    frame.body
+                );
+            },
+
+            onWebSocketError: error => {
+                console.error("WebSocket error:", error);
+                showStatus("WebSocket connection error");
+            },
+
+            onWebSocketClose: event => {
+                console.error("WebSocket closed:", event);
+                showStatus("WebSocket connection closed");
+            }
+        });
+
+        stompClient.activate();
+    }
+
+    function sendMessage() {
+        if (!stompClient || !stompClient.connected) {
+            showStatus("Connect first");
+            return;
+        }
+
+        const conversationId =
+            document.getElementById("conversationId")
+                .value.trim();
+
+        const receiverId =
+            document.getElementById("receiverId")
+                .value.trim();
+
+        const content =
+            document.getElementById("content")
+                .value.trim();
+
+        const request = {
+            conversationId: conversationId,
+            receiverId: receiverId,
+            content: content,
+            messageType: "TEXT"
+        };
+
+        stompClient.publish({
+            destination: "/app/chat.sendMessage",
+            headers: {
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(request)
+        });
+
+        showStatus(
+            "Message sent:\n" +
+            JSON.stringify(request, null, 2)
+        );
+    }
+
+    function disconnect() {
+        if (!stompClient) {
+            showStatus("No active connection");
+            return;
+        }
+
+        stompClient.deactivate();
+        stompClient = null;
+
+        showStatus("Disconnected");
+    }
+
+    function showStatus(message) {
+        document.getElementById("status").textContent = message;
+    }
+</script>
+
+</body>
+</html>
