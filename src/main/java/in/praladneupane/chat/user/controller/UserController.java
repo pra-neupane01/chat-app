@@ -1,6 +1,6 @@
 package in.praladneupane.chat.user.controller;
 
-import in.praladneupane.chat.common.dto.request.response.APIResponse;
+import in.praladneupane.chat.common.dto.response.APIResponse;
 import in.praladneupane.chat.user.dto.request.UserSearchRequest;
 import in.praladneupane.chat.user.dto.response.UserSearchResponse;
 import in.praladneupane.chat.user.service.UserService;

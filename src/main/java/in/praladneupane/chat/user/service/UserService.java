@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final UserSpecification userSpecification;
 
     public Page<UserSearchResponse> searchUsers(
             UserSearchRequest searchRequest,
