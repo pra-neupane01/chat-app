@@ -7,9 +7,7 @@ import in.praladneupane.chat.common.dto.request.PaginationRequest;
 import in.praladneupane.chat.common.dto.response.APIResponse;
 import in.praladneupane.chat.common.dto.response.PagedResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +22,9 @@ import java.util.UUID;
 public class ConversationController {
     private final ConversationService conversationService;
 
-    @PostMapping("/otherUserId")
+    @PostMapping("/{otherUserId}")
     public ResponseEntity<APIResponse<ConversationResponse>> createOrGetConversation(@PathVariable UUID otherUserId,
+
                                                                                      @AuthenticationPrincipal UserPrincipal userPrincipal, Principal principal){
         ConversationResponse conversationResponse = conversationService.getOrCreateConversation(userPrincipal.getId(), otherUserId);
 
