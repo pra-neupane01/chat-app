@@ -2,6 +2,8 @@ import {
   LogOut,
   MessageCirclePlus,
   Moon,
+  Bell,
+  BellOff,
   Search,
   Settings,
   Sun,
@@ -18,6 +20,7 @@ function Sidebar({
   error,
   loading,
   onConversationFilterChange,
+  onToggleNotifications,
   onOpenUserSearch,
   onOpenSettings,
   onSelectConversation,
@@ -25,9 +28,12 @@ function Sidebar({
   onRetry,
   user,
   totalUnread,
+  notificationsEnabled,
+  notificationPermission,
 }) {
   const { theme, toggleTheme } = useTheme()
   const ThemeIcon = theme === "dark" ? Sun : Moon
+  const NotificationIcon = notificationsEnabled ? Bell : BellOff
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col border-r border-white/10 bg-ink-900 md:w-[380px] lg:w-[420px]">
@@ -50,6 +56,18 @@ function Sidebar({
               icon={ThemeIcon}
               label={theme === "dark" ? "Switch to light" : "Switch to dark"}
               onClick={toggleTheme}
+            />
+            <IconButton
+              icon={NotificationIcon}
+              label={
+                notificationPermission === "denied"
+                  ? "Notifications blocked"
+                  : notificationsEnabled
+                    ? "Disable notifications"
+                    : "Enable notifications"
+              }
+              onClick={onToggleNotifications}
+              disabled={notificationPermission === "unsupported"}
             />
             <IconButton icon={Settings} label="Settings" onClick={onOpenSettings} />
             <IconButton icon={LogOut} label="Logout" onClick={onLogout} />

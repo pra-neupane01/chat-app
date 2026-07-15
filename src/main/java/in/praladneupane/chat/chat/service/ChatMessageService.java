@@ -237,11 +237,16 @@ public class ChatMessageService {
         getConversationForParticipant(conversationId, authenticatedUserId);
 
         int size = normalizeCursorSize(requestedSize);
-        List<ChatMessage> messages =
-                chatMessageRepository.findConversationMessagesBefore(
+        Pageable cursorPage = PageRequest.of(0, size + 1);
+        List<ChatMessage> messages = beforeSentAt == null
+                ? chatMessageRepository.findByConversation_IdOrderBySentAtDesc(
+                        conversationId,
+                        cursorPage
+                )
+                : chatMessageRepository.findByConversation_IdAndSentAtBeforeOrderBySentAtDesc(
                         conversationId,
                         beforeSentAt,
-                        PageRequest.of(0, size + 1)
+                        cursorPage
                 );
 
         boolean hasMore = messages.size() > size;

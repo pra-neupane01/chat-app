@@ -48,6 +48,50 @@ function shouldShowDateDivider(previousMessage, message) {
   )
 }
 
+function createPendingTextMessage({ content, conversation, user }) {
+  return {
+    id: `pending-${crypto.randomUUID()}`,
+    conversationId: conversation.id,
+    senderId: user.id,
+    senderName: user.fullName,
+    receiverId: conversation.otherUser.id,
+    content,
+    messageType: "TEXT",
+    messageStatus: "SENT",
+    sentAt: new Date().toISOString(),
+    pending: true,
+  }
+}
+
+function removeMatchingPendingMessage(messages, incomingMessage, userId) {
+  if (incomingMessage.senderId !== userId) {
+    return messages
+  }
+
+  const incomingTime = new Date(incomingMessage.sentAt).getTime()
+  const matchingPending = messages.find((message) => {
+    if (!message.pending) {
+      return false
+    }
+
+    const pendingTime = new Date(message.sentAt).getTime()
+
+    return (
+      message.conversationId === incomingMessage.conversationId &&
+      message.receiverId === incomingMessage.receiverId &&
+      message.content === incomingMessage.content &&
+      message.messageType === incomingMessage.messageType &&
+      Math.abs(incomingTime - pendingTime) < 120000
+    )
+  })
+
+  if (!matchingPending) {
+    return messages
+  }
+
+  return messages.filter((message) => message.id !== matchingPending.id)
+}
+
 function MessagePane({
   connected,
   conversation,
@@ -78,6 +122,7 @@ function MessagePane({
   const prependScrollHeightRef = useRef(null)
   const scrollBottomPendingRef = useRef(false)
   const nearBottomRef = useRef(true)
+  const pendingSettleTimersRef = useRef(new Map())
 
   const markRead = useCallback(async () => {
     if (!conversation?.id) {
@@ -215,7 +260,10 @@ function MessagePane({
         setNewMessagesAvailable(true)
       }
 
-      return mergeMessages(current, [liveMessage])
+      return mergeMessages(
+        removeMatchingPendingMessage(current, liveMessage, user?.id),
+        [liveMessage],
+      )
     })
 
     if (liveMessage.receiverId === user?.id) {
@@ -246,6 +294,17 @@ function MessagePane({
 
     setMessages((current) => markMessagesDeleted(current, messageDeletion))
   }, [conversation?.id, messageDeletion])
+
+  useEffect(() => {
+    const pendingSettleTimers = pendingSettleTimersRef.current
+
+    return () => {
+      pendingSettleTimers.forEach((timerId) => {
+        window.clearTimeout(timerId)
+      })
+      pendingSettleTimers.clear()
+    }
+  }, [])
 
   function scrollToNewest() {
     const element = scrollRef.current
@@ -310,6 +369,53 @@ function MessagePane({
     } catch (requestError) {
       setError(getApiError(requestError).message)
       throw requestError
+    }
+  }
+
+  async function handleSendTextMessage(content) {
+    if (!conversation?.id || !conversation.otherUser?.id || !user?.id) {
+      throw new Error("Select a conversation first")
+    }
+
+    const pendingMessage = createPendingTextMessage({
+      content,
+      conversation,
+      user,
+    })
+
+    scrollBottomPendingRef.current = true
+    setMessages((current) => mergeMessages(current, [pendingMessage]))
+    onMessageUpdated(pendingMessage)
+
+    try {
+      await onSendMessage(content)
+      const timerId = window.setTimeout(() => {
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === pendingMessage.id
+              ? { ...message, pending: false }
+              : message,
+          ),
+        )
+        pendingSettleTimersRef.current.delete(pendingMessage.id)
+      }, 2500)
+      pendingSettleTimersRef.current.set(pendingMessage.id, timerId)
+    } catch (sendError) {
+      const timerId = pendingSettleTimersRef.current.get(pendingMessage.id)
+
+      if (timerId) {
+        window.clearTimeout(timerId)
+        pendingSettleTimersRef.current.delete(pendingMessage.id)
+      }
+
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === pendingMessage.id
+            ? { ...message, pending: false, failed: true }
+            : message,
+        ),
+      )
+      throw sendError
     }
   }
 
@@ -387,7 +493,7 @@ function MessagePane({
       <MessageComposer
         connected={connected}
         onAttachment={handleAttachmentUpload}
-        onSend={onSendMessage}
+        onSend={handleSendTextMessage}
         onTyping={onTyping}
       />
 
