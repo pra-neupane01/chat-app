@@ -4,7 +4,11 @@ import in.praladneupane.chat.chat.dto.request.ChatMessageRequest;
 import in.praladneupane.chat.chat.dto.response.ChatMessageResponse;
 import in.praladneupane.chat.chat.model.ChatMessage;
 import in.praladneupane.chat.chat.model.Conversation;
+import in.praladneupane.chat.chat.model.MessageStatus;
+import in.praladneupane.chat.chat.model.MessageType;
 import in.praladneupane.chat.user.model.User;
+
+import java.time.LocalDateTime;
 
 public final class ChatMessageMapper {
 
@@ -22,7 +26,11 @@ public final class ChatMessageMapper {
                 .sender(sender)
                 .receiver(receiver)
                 .content(request.content())
-                .messageType(request.messageType())
+                .messageType(request.messageType() == null
+                        ? MessageType.TEXT
+                        : request.messageType())
+                .messageStatus(MessageStatus.SENT)
+                .sentAt(LocalDateTime.now())
                 .build();
     }
 
@@ -37,6 +45,7 @@ public final class ChatMessageMapper {
                 .messageType(chatMessage.getMessageType())
                 .messageStatus(chatMessage.getMessageStatus())
                 .sentAt(chatMessage.getSentAt())
+                .readAt(chatMessage.getReadAt())
                 .build();
     }
 }
