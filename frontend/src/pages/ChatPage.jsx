@@ -7,11 +7,13 @@ import {
 } from "../api/conversationApi"
 import EmptyState from "../components/common/EmptyState"
 import ChatHeader from "../components/layout/ChatHeader"
+import SettingsModal from "../components/layout/SettingsModal"
 import Sidebar from "../components/layout/Sidebar"
 import ConnectionBanner from "../components/messages/ConnectionBanner"
 import MessagePane from "../components/messages/MessagePane"
 import UserSearchModal from "../components/users/UserSearchModal"
 import { useAuth } from "../hooks/useAuth"
+import { useToast } from "../hooks/useToast"
 import { useWebSocket, useWebSocketEvent } from "../hooks/useWebSocket"
 import { SOCKET_EVENTS } from "../services/websocketService"
 import { getMessagePreview } from "../utils/messageUtils"
@@ -46,6 +48,7 @@ function upsertConversation(conversations, nextConversation) {
 
 function ChatPage() {
   const { logout, user } = useAuth()
+  const { showToast } = useToast()
   const {
     connected,
     connectionState,
@@ -59,6 +62,7 @@ function ChatPage() {
   const [loadingConversations, setLoadingConversations] = useState(true)
   const [conversationError, setConversationError] = useState("")
   const [userSearchOpen, setUserSearchOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [mobileListVisible, setMobileListVisible] = useState(true)
   const [liveMessage, setLiveMessage] = useState(null)
   const [readReceipt, setReadReceipt] = useState(null)
@@ -269,7 +273,13 @@ function ChatPage() {
   })
 
   useWebSocketEvent(SOCKET_EVENTS.ERROR, (socketError) => {
-    setConversationError(socketError?.message || "Realtime message failed")
+    const message = socketError?.message || "Realtime message failed"
+    setConversationError(message)
+    showToast({
+      title: socketError?.type || "Realtime error",
+      message,
+      tone: "error",
+    })
   })
 
   function selectConversation(conversation) {
@@ -358,6 +368,7 @@ function ChatPage() {
             loading={loadingConversations}
             onConversationFilterChange={setConversationFilter}
             onLogout={logout}
+            onOpenSettings={() => setSettingsOpen(true)}
             onOpenUserSearch={() => setUserSearchOpen(true)}
             onRetry={loadConversations}
             onSelectConversation={selectConversation}
@@ -420,6 +431,14 @@ function ChatPage() {
         onClose={() => setUserSearchOpen(false)}
         onSelectUser={handleSelectUser}
         open={userSearchOpen}
+      />
+
+      <SettingsModal
+        connectionState={connectionState}
+        onClose={() => setSettingsOpen(false)}
+        onLogout={logout}
+        open={settingsOpen}
+        user={user}
       />
     </main>
   )

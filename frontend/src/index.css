@@ -34,4 +34,46 @@
     scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
     scrollbar-width: thin;
   }
+
+  [data-theme="light"] body {
+    background: #f4f7f5;
+  }
+
+  [data-theme="light"] .bg-ink-950 {
+    background-color: #f4f7f5;
+  }
+
+  [data-theme="light"] .bg-ink-900 {
+    background-color: #ffffff;
+  }
+
+  [data-theme="light"] .bg-ink-800 {
+    background-color: #eaf1ed;
+  }
+
+  [data-theme="light"] .text-white,
+  [data-theme="light"] .text-slate-100,
+  [data-theme="light"] .text-slate-200 {
+    color: #0f172a;
+  }
+
+  [data-theme="light"] .text-slate-300,
+  [data-theme="light"] .text-slate-400,
+  [data-theme="light"] .text-slate-500 {
+    color: #64748b;
+  }
+
+  [data-theme="light"] .border-white\/10 {
+    border-color: rgba(15, 23, 42, 0.12);
+  }
+
+  [data-theme="light"] .bg-white\/5,
+  [data-theme="light"] .hover\:bg-white\/5:hover {
+    background-color: rgba(15, 23, 42, 0.05);
+  }
+
+  [data-theme="light"] .bg-white\/10,
+  [data-theme="light"] .hover\:bg-white\/10:hover {
+    background-color: rgba(15, 23, 42, 0.08);
+  }
 }

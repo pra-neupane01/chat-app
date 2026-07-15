@@ -4,10 +4,12 @@ import {
   Moon,
   Search,
   Settings,
+  Sun,
 } from "lucide-react"
 import Avatar from "../common/Avatar"
 import IconButton from "../common/IconButton"
 import ConversationList from "../conversations/ConversationList"
+import { useTheme } from "../../hooks/useTheme"
 
 function Sidebar({
   activeConversationId,
@@ -17,12 +19,16 @@ function Sidebar({
   loading,
   onConversationFilterChange,
   onOpenUserSearch,
+  onOpenSettings,
   onSelectConversation,
   onLogout,
   onRetry,
   user,
   totalUnread,
 }) {
+  const { theme, toggleTheme } = useTheme()
+  const ThemeIcon = theme === "dark" ? Sun : Moon
+
   return (
     <aside className="flex h-full min-h-0 w-full flex-col border-r border-white/10 bg-ink-900 md:w-[380px] lg:w-[420px]">
       <header className="shrink-0 border-b border-white/10 px-4 py-4">
@@ -40,8 +46,12 @@ function Sidebar({
           </div>
 
           <div className="flex items-center gap-2">
-            <IconButton icon={Moon} label="Theme" disabled />
-            <IconButton icon={Settings} label="Settings" disabled />
+            <IconButton
+              icon={ThemeIcon}
+              label={theme === "dark" ? "Switch to light" : "Switch to dark"}
+              onClick={toggleTheme}
+            />
+            <IconButton icon={Settings} label="Settings" onClick={onOpenSettings} />
             <IconButton icon={LogOut} label="Logout" onClick={onLogout} />
           </div>
         </div>
