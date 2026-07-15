@@ -2,7 +2,10 @@ package in.praladneupane.chat.chat.service;
 
 import in.praladneupane.chat.chat.dto.response.ConversationResponse;
 import in.praladneupane.chat.chat.mapper.ConversationMapper;
+import in.praladneupane.chat.chat.model.ChatMessage;
 import in.praladneupane.chat.chat.model.Conversation;
+import in.praladneupane.chat.chat.model.MessageStatus;
+import in.praladneupane.chat.chat.repository.ChatMessageRepository;
 import in.praladneupane.chat.chat.repository.ConversationRepository;
 import in.praladneupane.chat.common.exception.ResourceNotFoundException;
 import in.praladneupane.chat.user.model.User;
@@ -13,7 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -21,6 +24,7 @@ import java.util.UUID;
 public class ConversationService {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     @Transactional
     public ConversationResponse getOrCreateConversation(UUID currentUserId,
@@ -51,7 +55,11 @@ public class ConversationService {
                         .userOne(userOne)
                         .userTwo(userTwo)
                         .build()));
-        return ConversationMapper.toResponse(conversation, otherUser);
+        return toConversationResponse(
+                conversation,
+                otherUser,
+                currentUserId
+        );
     }
 
 
@@ -65,7 +73,36 @@ public class ConversationService {
                     ? conversation.getUserTwo()
                     : conversation.getUserOne();
 
-            return ConversationMapper.toResponse(conversation, otherUser);
+            return toConversationResponse(
+                    conversation,
+                    otherUser,
+                    authenticatedUserId
+            );
         });
+    }
+
+    private ConversationResponse toConversationResponse(
+            Conversation conversation,
+            User otherUser,
+            UUID authenticatedUserId
+    ) {
+        Optional<ChatMessage> lastMessage =
+                chatMessageRepository.findTopByConversation_IdOrderBySentAtDesc(
+                        conversation.getId()
+                );
+
+        long unreadCount =
+                chatMessageRepository.countByConversation_IdAndReceiver_IdAndMessageStatusNot(
+                        conversation.getId(),
+                        authenticatedUserId,
+                        MessageStatus.READ
+                );
+
+        return ConversationMapper.toResponse(
+                conversation,
+                otherUser,
+                lastMessage.orElse(null),
+                unreadCount
+        );
     }
 }

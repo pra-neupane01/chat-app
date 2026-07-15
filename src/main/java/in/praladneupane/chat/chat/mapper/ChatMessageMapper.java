@@ -4,7 +4,11 @@ import in.praladneupane.chat.chat.dto.request.ChatMessageRequest;
 import in.praladneupane.chat.chat.dto.response.ChatMessageResponse;
 import in.praladneupane.chat.chat.model.ChatMessage;
 import in.praladneupane.chat.chat.model.Conversation;
+import in.praladneupane.chat.chat.model.MessageStatus;
+import in.praladneupane.chat.chat.model.MessageType;
 import in.praladneupane.chat.user.model.User;
+
+import java.time.LocalDateTime;
 
 public final class ChatMessageMapper {
 
@@ -22,7 +26,11 @@ public final class ChatMessageMapper {
                 .sender(sender)
                 .receiver(receiver)
                 .content(request.content())
-                .messageType(request.messageType())
+                .messageType(request.messageType() == null
+                        ? MessageType.TEXT
+                        : request.messageType())
+                .messageStatus(MessageStatus.SENT)
+                .sentAt(LocalDateTime.now())
                 .build();
     }
 
@@ -33,10 +41,19 @@ public final class ChatMessageMapper {
                 .senderId(chatMessage.getSender().getId())
                 .senderName(chatMessage.getSender().getFullName())
                 .receiverId(chatMessage.getReceiver().getId())
-                .content(chatMessage.getContent())
+                .content(chatMessage.isDeleted() ? null : chatMessage.getContent())
                 .messageType(chatMessage.getMessageType())
                 .messageStatus(chatMessage.getMessageStatus())
                 .sentAt(chatMessage.getSentAt())
+                .readAt(chatMessage.getReadAt())
+                .edited(chatMessage.isEdited())
+                .editedAt(chatMessage.getEditedAt())
+                .deleted(chatMessage.isDeleted())
+                .deletedAt(chatMessage.getDeletedAt())
+                .attachmentUrl(chatMessage.isDeleted() ? null : chatMessage.getAttachmentUrl())
+                .attachmentFileName(chatMessage.isDeleted() ? null : chatMessage.getAttachmentFileName())
+                .attachmentContentType(chatMessage.isDeleted() ? null : chatMessage.getAttachmentContentType())
+                .attachmentSize(chatMessage.isDeleted() ? null : chatMessage.getAttachmentSize())
                 .build();
     }
 }
