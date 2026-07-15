@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Paperclip, Send } from "lucide-react"
 
-function MessageComposer({ connected, onSend, onTyping }) {
+function MessageComposer({ connected, onAttachment, onSend, onTyping }) {
   const [content, setContent] = useState("")
   const [sending, setSending] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState("")
   const typingActiveRef = useRef(false)
   const typingStopTimerRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   const clearTypingTimer = useCallback(() => {
     if (typingStopTimerRef.current) {
@@ -46,7 +49,7 @@ function MessageComposer({ connected, onSend, onTyping }) {
     event.preventDefault()
     const trimmedContent = content.trim()
 
-    if (!trimmedContent || sending || !connected) {
+    if (!trimmedContent || sending || uploading || !connected) {
       return
     }
 
@@ -70,6 +73,59 @@ function MessageComposer({ connected, onSend, onTyping }) {
     }
   }
 
+  function validateAttachment(file) {
+    const maxSize = 15 * 1024 * 1024
+    const blockedExtensions = [".bat", ".cmd", ".com", ".exe", ".msi", ".sh"]
+    const lowerName = file.name.toLowerCase()
+
+    if (file.size > maxSize) {
+      return "Files must be 15 MB or smaller"
+    }
+
+    if (blockedExtensions.some((extension) => lowerName.endsWith(extension))) {
+      return "This file type is not allowed"
+    }
+
+    return ""
+  }
+
+  async function handleAttachmentChange(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+
+    if (!file || uploading || !connected) {
+      return
+    }
+
+    const validationError = validateAttachment(file)
+
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    setUploading(true)
+    setUploadProgress(0)
+    setError("")
+
+    try {
+      await onAttachment(file, content.trim(), (progressEvent) => {
+        const total = progressEvent.total || file.size
+        const progress = total
+          ? Math.round((progressEvent.loaded * 100) / total)
+          : 0
+        setUploadProgress(progress)
+      })
+      setContent("")
+      stopTyping()
+    } catch (uploadError) {
+      setError(uploadError.message || "Upload failed")
+    } finally {
+      setUploading(false)
+      setUploadProgress(0)
+    }
+  }
+
   useEffect(() => {
     return () => stopTyping()
   }, [stopTyping])
@@ -85,12 +141,28 @@ function MessageComposer({ connected, onSend, onTyping }) {
         </div>
       ) : null}
 
+      {uploading ? (
+        <div className="mb-2 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-1.5 rounded-full bg-emerald-400 transition-all"
+            style={{ width: `${uploadProgress}%` }}
+          />
+        </div>
+      ) : null}
+
       <div className="flex items-end gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleAttachmentChange}
+        />
         <button
           type="button"
           className="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-slate-400 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          disabled
-          title="Attachments are added in the next feature slice"
+          disabled={!connected || sending || uploading}
+          onClick={() => fileInputRef.current?.click()}
+          title="Add attachment"
           aria-label="Add attachment"
         >
           <Paperclip size={18} />
@@ -110,7 +182,7 @@ function MessageComposer({ connected, onSend, onTyping }) {
 
         <button
           type="submit"
-          disabled={!connected || sending || !content.trim()}
+          disabled={!connected || sending || uploading || !content.trim()}
           className="mb-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-400 text-ink-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Send message"
         >

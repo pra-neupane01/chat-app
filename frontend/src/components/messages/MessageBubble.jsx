@@ -8,20 +8,8 @@ import {
   Trash2,
   X,
 } from "lucide-react"
-import { API_BASE_URL } from "../../api/axiosInstance"
 import { formatFileSize, formatMessageTime } from "../../utils/dateFormatter"
-
-function attachmentUrlFor(message) {
-  if (!message.attachmentUrl) {
-    return ""
-  }
-
-  if (/^https?:\/\//i.test(message.attachmentUrl)) {
-    return message.attachmentUrl
-  }
-
-  return `${API_BASE_URL.replace("/api/v1", "")}${message.attachmentUrl}`
-}
+import { getAttachmentUrl } from "../../utils/messageUtils"
 
 function MessageStatus({ status }) {
   if (status === "READ") {
@@ -35,8 +23,14 @@ function MessageStatus({ status }) {
   return <Check className="text-slate-400" size={15} />
 }
 
-function MessageBubble({ message, onDeleteMessage, onEditMessage, own }) {
-  const attachmentUrl = attachmentUrlFor(message)
+function MessageBubble({
+  message,
+  onDeleteMessage,
+  onEditMessage,
+  onPreviewImage,
+  own,
+}) {
+  const attachmentUrl = getAttachmentUrl(message)
   const deleted = message.deleted
   const [menuOpen, setMenuOpen] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -153,13 +147,17 @@ function MessageBubble({ message, onDeleteMessage, onEditMessage, own }) {
         ) : null}
 
         {!editing && message.messageType === "IMAGE" && attachmentUrl && !deleted ? (
-          <a href={attachmentUrl} target="_blank" rel="noreferrer">
+          <button
+            type="button"
+            className="block text-left"
+            onClick={() => onPreviewImage(message)}
+          >
             <img
               alt={message.attachmentFileName || "Attachment"}
               className="mb-2 max-h-72 rounded-xl object-cover"
               src={attachmentUrl}
             />
-          </a>
+          </button>
         ) : null}
 
         {!editing && message.messageType === "FILE" && attachmentUrl && !deleted ? (

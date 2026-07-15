@@ -6,6 +6,7 @@ import {
   editMessage,
   getConversationHistoryBefore,
   markConversationAsRead,
+  uploadAttachment,
 } from "../../api/messageApi"
 import { useAuth } from "../../hooks/useAuth"
 import {
@@ -18,6 +19,7 @@ import ConfirmDialog from "../common/ConfirmDialog"
 import DateDivider from "./DateDivider"
 import MessageBubble from "./MessageBubble"
 import MessageComposer from "./MessageComposer"
+import ImagePreviewModal from "./ImagePreviewModal"
 
 function normalizeCursorPage(page) {
   return {
@@ -70,6 +72,7 @@ function MessagePane({
   const [newMessagesAvailable, setNewMessagesAvailable] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [previewImage, setPreviewImage] = useState(null)
   const scrollRef = useRef(null)
   const initialScrollPendingRef = useRef(false)
   const prependScrollHeightRef = useRef(null)
@@ -284,6 +287,32 @@ function MessagePane({
     }
   }
 
+  async function handleAttachmentUpload(file, content, onUploadProgress) {
+    if (!conversation?.id || !conversation.otherUser?.id) {
+      throw new Error("Select a conversation first")
+    }
+
+    const messageType = file.type.startsWith("image/") ? "IMAGE" : "FILE"
+
+    try {
+      const uploadedMessage = await uploadAttachment({
+        conversationId: conversation.id,
+        receiverId: conversation.otherUser.id,
+        content,
+        file,
+        messageType,
+        onUploadProgress,
+      })
+
+      scrollBottomPendingRef.current = true
+      setMessages((current) => mergeMessages(current, [uploadedMessage]))
+      onMessageUpdated(uploadedMessage)
+    } catch (requestError) {
+      setError(getApiError(requestError).message)
+      throw requestError
+    }
+  }
+
   if (loadingInitial) {
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center text-slate-400">
@@ -330,6 +359,7 @@ function MessagePane({
                   message={message}
                   onDeleteMessage={setDeleteTarget}
                   onEditMessage={handleEditMessage}
+                  onPreviewImage={setPreviewImage}
                   own={message.senderId === user?.id}
                 />
               </div>
@@ -356,6 +386,7 @@ function MessagePane({
 
       <MessageComposer
         connected={connected}
+        onAttachment={handleAttachmentUpload}
         onSend={onSendMessage}
         onTyping={onTyping}
       />
@@ -368,6 +399,11 @@ function MessagePane({
         onConfirm={handleDeleteMessage}
         open={Boolean(deleteTarget)}
         title="Delete this message?"
+      />
+
+      <ImagePreviewModal
+        message={previewImage}
+        onClose={() => setPreviewImage(null)}
       />
     </>
   )

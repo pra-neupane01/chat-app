@@ -38,6 +38,31 @@ export async function deleteMessage(messageId) {
   return unwrapApiResponse(response)
 }
 
+export async function uploadAttachment({
+  content,
+  conversationId,
+  file,
+  messageType,
+  onUploadProgress,
+  receiverId,
+}) {
+  const formData = new FormData()
+  formData.append("conversationId", conversationId)
+  formData.append("receiverId", receiverId)
+  formData.append("messageType", messageType)
+  formData.append("file", file)
+
+  if (content) {
+    formData.append("content", content)
+  }
+
+  const response = await axiosInstance.post("/messages/attachments", formData, {
+    onUploadProgress,
+  })
+
+  return unwrapApiResponse(response)
+}
+
 export async function getTotalUnreadCount() {
   const response = await axiosInstance.get("/messages/unread-count")
   return unwrapApiResponse(response)

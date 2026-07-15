@@ -1,3 +1,17 @@
+import { API_BASE_URL } from "../api/axiosInstance"
+
+export function getAttachmentUrl(message) {
+  if (!message?.attachmentUrl) {
+    return ""
+  }
+
+  if (/^https?:\/\//i.test(message.attachmentUrl)) {
+    return message.attachmentUrl
+  }
+
+  return `${API_BASE_URL.replace("/api/v1", "")}${message.attachmentUrl}`
+}
+
 export function getMessagePreview(message) {
   if (!message) {
     return ""
