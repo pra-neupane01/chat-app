@@ -21,6 +21,7 @@ public record ChatMessageResponse(
         MessageType messageType,
         MessageStatus messageStatus,
 
-        LocalDateTime sentAt
+        LocalDateTime sentAt,
+        LocalDateTime readAt
         ) {
 }
