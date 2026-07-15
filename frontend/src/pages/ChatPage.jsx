@@ -319,6 +319,25 @@ function ChatPage() {
     })
   }
 
+  function handleLocalMessageUpdate(message) {
+    setMessageUpdate(message)
+    applyMessagePreview(message)
+  }
+
+  function handleLocalMessageDeletion(deletion) {
+    setMessageDeletion(deletion)
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === deletion.conversationId
+          ? {
+              ...conversation,
+              lastMessage: "This message was deleted.",
+            }
+          : conversation,
+      ),
+    )
+  }
+
   const activeTypingUser = activeConversation
     ? typingByConversation[activeConversation.id]
     : null
@@ -370,6 +389,8 @@ function ChatPage() {
                 messageDeletion={messageDeletion}
                 messageUpdate={messageUpdate}
                 onConversationRead={resetConversationUnread}
+                onMessageDeleted={handleLocalMessageDeletion}
+                onMessageUpdated={handleLocalMessageUpdate}
                 onSendMessage={handleSendMessage}
                 onTyping={handleTyping}
                 readReceipt={readReceipt}

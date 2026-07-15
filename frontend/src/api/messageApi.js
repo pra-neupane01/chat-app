@@ -25,6 +25,19 @@ export async function markConversationAsRead(conversationId) {
   return unwrapApiResponse(response)
 }
 
+export async function editMessage(messageId, content) {
+  const response = await axiosInstance.patch(`/messages/${messageId}`, {
+    content,
+  })
+
+  return unwrapApiResponse(response)
+}
+
+export async function deleteMessage(messageId) {
+  const response = await axiosInstance.delete(`/messages/${messageId}`)
+  return unwrapApiResponse(response)
+}
+
 export async function getTotalUnreadCount() {
   const response = await axiosInstance.get("/messages/unread-count")
   return unwrapApiResponse(response)

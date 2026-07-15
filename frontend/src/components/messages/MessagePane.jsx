@@ -2,6 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { Loader2, MessageSquare } from "lucide-react"
 import { getApiError } from "../../api/axiosInstance"
 import {
+  deleteMessage,
+  editMessage,
   getConversationHistoryBefore,
   markConversationAsRead,
 } from "../../api/messageApi"
@@ -12,6 +14,7 @@ import {
   mergeMessages,
 } from "../../utils/messageUtils"
 import EmptyState from "../common/EmptyState"
+import ConfirmDialog from "../common/ConfirmDialog"
 import DateDivider from "./DateDivider"
 import MessageBubble from "./MessageBubble"
 import MessageComposer from "./MessageComposer"
@@ -50,6 +53,8 @@ function MessagePane({
   messageDeletion,
   messageUpdate,
   onConversationRead,
+  onMessageDeleted,
+  onMessageUpdated,
   onSendMessage,
   onTyping,
   readReceipt,
@@ -63,6 +68,8 @@ function MessagePane({
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [error, setError] = useState("")
   const [newMessagesAvailable, setNewMessagesAvailable] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const scrollRef = useRef(null)
   const initialScrollPendingRef = useRef(false)
   const prependScrollHeightRef = useRef(null)
@@ -247,6 +254,36 @@ function MessagePane({
     }
   }
 
+  async function handleEditMessage(message, content) {
+    try {
+      const updatedMessage = await editMessage(message.id, content)
+      setMessages((current) => mergeMessages(current, [updatedMessage]))
+      onMessageUpdated(updatedMessage)
+    } catch (requestError) {
+      setError(getApiError(requestError).message)
+      throw requestError
+    }
+  }
+
+  async function handleDeleteMessage() {
+    if (!deleteTarget) {
+      return
+    }
+
+    setDeleting(true)
+
+    try {
+      const deletion = await deleteMessage(deleteTarget.id)
+      setMessages((current) => markMessagesDeleted(current, deletion))
+      onMessageDeleted(deletion)
+      setDeleteTarget(null)
+    } catch (requestError) {
+      setError(getApiError(requestError).message)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (loadingInitial) {
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center text-slate-400">
@@ -291,6 +328,8 @@ function MessagePane({
                 ) : null}
                 <MessageBubble
                   message={message}
+                  onDeleteMessage={setDeleteTarget}
+                  onEditMessage={handleEditMessage}
                   own={message.senderId === user?.id}
                 />
               </div>
@@ -319,6 +358,16 @@ function MessagePane({
         connected={connected}
         onSend={onSendMessage}
         onTyping={onTyping}
+      />
+
+      <ConfirmDialog
+        confirmLabel="Delete"
+        description="The message will be replaced with a deleted-message placeholder for both participants."
+        loading={deleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteMessage}
+        open={Boolean(deleteTarget)}
+        title="Delete this message?"
       />
     </>
   )
