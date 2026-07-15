@@ -10,5 +10,8 @@ import java.util.UUID;
 public record ConversationResponse(
         UUID id,
         UserSearchResponse otherUser,
+        String lastMessage,
+        LocalDateTime lastMessageTime,
+        long unreadCount,
         LocalDateTime createdAt) {
 }
