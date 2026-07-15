@@ -40,4 +40,7 @@ public class ChatMessage extends BaseEntity {
 
     @Column(name = "sent_at", nullable = false, updatable = false)
     private LocalDateTime sentAt;
+
+    @Column(name = "read_at")
+    private LocalDateTime readAt;
 }
