@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -25,7 +24,7 @@ public class ConversationController {
     @PostMapping("/{otherUserId}")
     public ResponseEntity<APIResponse<ConversationResponse>> createOrGetConversation(@PathVariable UUID otherUserId,
 
-                                                                                     @AuthenticationPrincipal UserPrincipal userPrincipal, Principal principal){
+                                                                                     @AuthenticationPrincipal UserPrincipal userPrincipal){
         ConversationResponse conversationResponse = conversationService.getOrCreateConversation(userPrincipal.getId(), otherUserId);
 
         APIResponse<ConversationResponse> apiResponse = APIResponse.<ConversationResponse>builder()
@@ -38,6 +37,7 @@ public class ConversationController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping
     public ResponseEntity<APIResponse<PagedResponse<ConversationResponse>>> getAllConversations(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @ModelAttribute PaginationRequest paginationRequest
