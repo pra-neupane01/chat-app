@@ -2,176 +2,558 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat WebSocket Test</title>
 
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs/bundles/stomp.umd.min.js"></script>
+
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fb;
+            color: #172033;
+        }
+
+        main {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        h1 {
+            margin: 0 0 18px;
+            font-size: 24px;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(320px, 420px) 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .panel {
+            background: #ffffff;
+            border: 1px solid #d9e0ea;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        input,
+        textarea,
+        select {
+            box-sizing: border-box;
+            width: 100%;
+            border: 1px solid #b9c4d4;
+            border-radius: 6px;
+            padding: 9px 10px;
+            font: inherit;
+            background: #ffffff;
+        }
+
+        textarea {
+            min-height: 88px;
+            resize: vertical;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 6px;
+            padding: 9px 12px;
+            font: inherit;
+            font-weight: 700;
+            color: #ffffff;
+            background: #275fbd;
+            cursor: pointer;
+        }
+
+        button.secondary {
+            background: #526070;
+        }
+
+        button.danger {
+            background: #b73333;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        pre {
+            min-height: 120px;
+            max-height: 520px;
+            overflow: auto;
+            margin: 0;
+            padding: 12px;
+            border-radius: 6px;
+            background: #111827;
+            color: #d5e1f5;
+            font-size: 13px;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .status {
+            min-height: 58px;
+        }
+
+        @media (max-width: 840px) {
+            main {
+                padding: 16px;
+            }
+
+            .grid,
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-
 <body>
+<main>
+    <h1>Chat WebSocket Test</h1>
 
-<h2>WebSocket Chat Test</h2>
+    <div class="grid">
+        <section>
+            <div class="panel">
+                <h2>Connection</h2>
 
-<label>JWT Token</label><br>
-<textarea cols="80" id="token" rows="4"></textarea><br><br>
+                <label for="apiBaseUrl">API Base URL</label>
+                <input id="apiBaseUrl" value="http://localhost:8082/api/v1">
 
-<label>Conversation ID</label><br>
-<input id="conversationId" size="50"><br><br>
+                <label for="token">JWT Token</label>
+                <textarea id="token" placeholder="Paste token only, without Bearer"></textarea>
 
-<label>Receiver ID</label><br>
-<input id="receiverId" size="50"><br><br>
+                <div class="buttons">
+                    <button id="connectButton" onclick="connect()">Connect</button>
+                    <button class="secondary" onclick="disconnect()">Disconnect</button>
+                    <button class="secondary" onclick="clearLog()">Clear log</button>
+                </div>
+            </div>
 
-<label>Message</label><br>
-<input id="content" size="50" value="Hello from WebSocket"><br><br>
+            <div class="panel">
+                <h2>Conversation</h2>
 
-<button onclick="connect()">Connect</button>
-<button onclick="sendMessage()">Send message</button>
-<button onclick="disconnect()">Disconnect</button>
+                <label for="conversationId">Conversation ID</label>
+                <input id="conversationId" placeholder="UUID">
 
-<h3>Status</h3>
-<pre id="status">Not connected</pre>
+                <label for="receiverId">Receiver User ID</label>
+                <input id="receiverId" placeholder="UUID">
 
-<h3>Received messages</h3>
-<pre id="messages"></pre>
+                <label for="messageId">Message ID for edit/delete</label>
+                <input id="messageId" placeholder="UUID">
+            </div>
+
+            <div class="panel">
+                <h2>Send Message</h2>
+
+                <label for="content">Message</label>
+                <input id="content" value="Hello from WebSocket">
+
+                <label for="messageType">Message Type</label>
+                <select id="messageType">
+                    <option value="TEXT">TEXT</option>
+                    <option value="IMAGE">IMAGE</option>
+                    <option value="FILE">FILE</option>
+                </select>
+
+                <div class="buttons">
+                    <button onclick="sendMessage()">Send</button>
+                    <button class="secondary" onclick="sendTyping(true)">Typing true</button>
+                    <button class="secondary" onclick="sendTyping(false)">Typing false</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Attachment</h2>
+
+                <label for="attachmentFile">File</label>
+                <input id="attachmentFile" type="file">
+
+                <label for="attachmentContent">Optional Caption</label>
+                <input id="attachmentContent" placeholder="Caption">
+
+                <div class="buttons">
+                    <button onclick="uploadAttachment()">Upload and Send</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>REST Actions</h2>
+
+                <label for="editContent">Edited Content</label>
+                <input id="editContent" value="Edited message content">
+
+                <div class="row">
+                    <div>
+                        <label for="cursorBefore">Cursor Before sentAt</label>
+                        <input id="cursorBefore" placeholder="2026-07-15T11:55:00">
+                    </div>
+                    <div>
+                        <label for="cursorSize">Cursor Size</label>
+                        <input id="cursorSize" type="number" min="1" max="100" value="20">
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button onclick="editMessage()">Edit</button>
+                    <button class="danger" onclick="deleteMessage()">Delete</button>
+                    <button class="secondary" onclick="markRead()">Mark Read</button>
+                    <button class="secondary" onclick="loadCursorHistory()">Load Older</button>
+                    <button class="secondary" onclick="loadUnreadCount()">Unread Count</button>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="panel">
+                <h2>Status</h2>
+                <pre id="status" class="status">Not connected</pre>
+            </div>
+
+            <div class="panel">
+                <h2>Events</h2>
+                <pre id="events"></pre>
+            </div>
+        </section>
+    </div>
+</main>
 
 <script>
     let stompClient = null;
 
-    function connect() {
-        const token =
-            document.getElementById("token").value.trim();
+    const privateSubscriptions = [
+        "/user/queue/messages",
+        "/user/queue/typing",
+        "/user/queue/message-updates",
+        "/user/queue/message-deletions",
+        "/user/queue/read-receipts",
+        "/user/queue/errors"
+    ];
 
-        const conversationId =
-            document.getElementById("conversationId").value.trim();
+    function connect() {
+        const token = getToken();
 
         if (!token) {
-            showStatus("JWT token is required");
+            setStatus("JWT token is required");
             return;
         }
 
-        if (!conversationId) {
-            showStatus("Conversation ID is required");
-            return;
-        }
-
-        showStatus("Connecting...");
+        setStatus("Connecting...");
 
         stompClient = new StompJs.Client({
-            webSocketFactory: () =>
-                new SockJS("http://localhost:8082/api/v1/ws"),
-
+            webSocketFactory: () => new SockJS(`${getApiBaseUrl()}/ws`),
             connectHeaders: {
-                Authorization: "Bearer " + token
+                Authorization: `Bearer ${token}`
             },
-
             reconnectDelay: 5000,
-
-            debug: message => {
-                console.log("[STOMP]", message);
-            },
-
+            debug: message => console.log("[STOMP]", message),
             onConnect: frame => {
-                console.log("Connected frame:", frame);
-
-                showStatus(
-                    "Connected successfully\n" +
-                    `Subscribed to /topic/conversations/${conversationId}`
-                );
-
-                stompClient.subscribe(
-                    `/topic/conversations/${conversationId}`,
-                    frame => {
-                        const receivedMessage =
-                            JSON.parse(frame.body);
-
-                        document.getElementById("messages")
-                            .textContent +=
-                            JSON.stringify(receivedMessage, null, 2)
-                            + "\n\n";
-                    }
-                );
+                setStatus("Connected\n" + JSON.stringify(frame.headers, null, 2));
+                subscribeToPrivateQueues();
             },
-
             onStompError: frame => {
-                console.error("STOMP error:", frame);
-
-                showStatus(
-                    "STOMP error:\n" +
-                    (frame.headers["message"] || "") +
-                    "\n" +
-                    frame.body
-                );
+                logEvent("STOMP error", {
+                    headers: frame.headers,
+                    body: frame.body
+                });
+                setStatus("STOMP error: " + (frame.headers.message || "unknown"));
             },
-
             onWebSocketError: error => {
-                console.error("WebSocket error:", error);
-                showStatus("WebSocket connection error");
+                console.error(error);
+                setStatus("WebSocket connection error");
             },
-
             onWebSocketClose: event => {
-                console.error("WebSocket closed:", event);
-                showStatus("WebSocket connection closed");
+                console.warn(event);
+                setStatus("WebSocket connection closed");
             }
         });
 
         stompClient.activate();
     }
 
+    function subscribeToPrivateQueues() {
+        privateSubscriptions.forEach(destination => {
+            stompClient.subscribe(destination, frame => {
+                logEvent(destination, parseFrameBody(frame));
+            });
+        });
+
+        logEvent("subscriptions", privateSubscriptions);
+    }
+
     function sendMessage() {
-        if (!stompClient || !stompClient.connected) {
-            showStatus("Connect first");
-            return;
-        }
-
-        const conversationId =
-            document.getElementById("conversationId")
-                .value.trim();
-
-        const receiverId =
-            document.getElementById("receiverId")
-                .value.trim();
-
-        const content =
-            document.getElementById("content")
-                .value.trim();
+        ensureConnected();
 
         const request = {
-            conversationId: conversationId,
-            receiverId: receiverId,
-            content: content,
-            messageType: "TEXT"
+            conversationId: getRequiredValue("conversationId"),
+            receiverId: getRequiredValue("receiverId"),
+            content: getRequiredValue("content"),
+            messageType: getValue("messageType")
         };
 
         stompClient.publish({
-            destination: "/app/chat.sendMessage",
+            destination: "/app/chat.send",
             headers: {
                 "content-type": "application/json"
             },
             body: JSON.stringify(request)
         });
 
-        showStatus(
-            "Message sent:\n" +
-            JSON.stringify(request, null, 2)
+        logEvent("sent /app/chat.send", request);
+    }
+
+    function sendTyping(typing) {
+        ensureConnected();
+
+        const request = {
+            conversationId: getRequiredValue("conversationId"),
+            typing
+        };
+
+        stompClient.publish({
+            destination: "/app/chat.typing",
+            headers: {
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(request)
+        });
+
+        logEvent("sent /app/chat.typing", request);
+    }
+
+    async function uploadAttachment() {
+        const fileInput = document.getElementById("attachmentFile");
+
+        if (!fileInput.files.length) {
+            throw new Error("Choose a file first");
+        }
+
+        const formData = new FormData();
+        formData.append("conversationId", getRequiredValue("conversationId"));
+        formData.append("receiverId", getRequiredValue("receiverId"));
+        formData.append("messageType", getValue("messageType"));
+        formData.append("file", fileInput.files[0]);
+
+        const caption = getValue("attachmentContent");
+        if (caption) {
+            formData.append("content", caption);
+        }
+
+        const response = await authenticatedFetch("/messages/attachments", {
+            method: "POST",
+            body: formData
+        });
+
+        logEvent("POST /messages/attachments", response);
+    }
+
+    async function editMessage() {
+        const messageId = getRequiredValue("messageId");
+
+        const response = await authenticatedFetch(`/messages/${messageId}`, {
+            method: "PATCH",
+            headers: {
+                "content-type": "application/json"
+            },
+            body: JSON.stringify({
+                content: getRequiredValue("editContent")
+            })
+        });
+
+        logEvent(`PATCH /messages/${messageId}`, response);
+    }
+
+    async function deleteMessage() {
+        const messageId = getRequiredValue("messageId");
+
+        const response = await authenticatedFetch(`/messages/${messageId}`, {
+            method: "DELETE"
+        });
+
+        logEvent(`DELETE /messages/${messageId}`, response);
+    }
+
+    async function markRead() {
+        const conversationId = getRequiredValue("conversationId");
+
+        const response = await authenticatedFetch(
+            `/messages/conversations/${conversationId}/read`,
+            {
+                method: "PATCH"
+            }
         );
+
+        logEvent("mark read", response);
+    }
+
+    async function loadCursorHistory() {
+        const conversationId = getRequiredValue("conversationId");
+        const params = new URLSearchParams();
+        const before = getValue("cursorBefore");
+        const size = getValue("cursorSize");
+
+        if (before) {
+            params.set("before", before);
+        }
+
+        if (size) {
+            params.set("size", size);
+        }
+
+        const query = params.toString();
+        const path = `/messages/conversations/${conversationId}/cursor${query ? `?${query}` : ""}`;
+        const response = await authenticatedFetch(path);
+
+        if (response.data && response.data.nextCursor) {
+            document.getElementById("cursorBefore").value = response.data.nextCursor;
+        }
+
+        logEvent("cursor history", response);
+    }
+
+    async function loadUnreadCount() {
+        const response = await authenticatedFetch("/messages/unread-count");
+        logEvent("unread count", response);
     }
 
     function disconnect() {
         if (!stompClient) {
-            showStatus("No active connection");
+            setStatus("No active connection");
             return;
         }
 
         stompClient.deactivate();
         stompClient = null;
-
-        showStatus("Disconnected");
+        setStatus("Disconnected");
     }
 
-    function showStatus(message) {
+    async function authenticatedFetch(path, options = {}) {
+        const headers = options.headers ? {...options.headers} : {};
+        headers.Authorization = `Bearer ${getToken()}`;
+
+        const response = await fetch(`${getApiBaseUrl()}${path}`, {
+            ...options,
+            headers
+        });
+
+        const text = await response.text();
+        const body = text ? JSON.parse(text) : null;
+
+        if (!response.ok) {
+            logEvent(`HTTP ${response.status}`, body);
+            throw new Error(body && body.message ? body.message : `HTTP ${response.status}`);
+        }
+
+        return body;
+    }
+
+    function ensureConnected() {
+        if (!stompClient || !stompClient.connected) {
+            throw new Error("Connect first");
+        }
+    }
+
+    function getApiBaseUrl() {
+        return document.getElementById("apiBaseUrl").value.trim().replace(/\/$/, "");
+    }
+
+    function getToken() {
+        return document.getElementById("token").value.trim().replace(/^Bearer\s+/i, "");
+    }
+
+    function getValue(id) {
+        return document.getElementById(id).value.trim();
+    }
+
+    function getRequiredValue(id) {
+        const value = getValue(id);
+
+        if (!value) {
+            throw new Error(`${id} is required`);
+        }
+
+        return value;
+    }
+
+    function parseFrameBody(frame) {
+        if (!frame.body) {
+            return null;
+        }
+
+        try {
+            return JSON.parse(frame.body);
+        } catch (error) {
+            return frame.body;
+        }
+    }
+
+    function setStatus(message) {
         document.getElementById("status").textContent = message;
     }
-</script>
 
+    function logEvent(label, payload) {
+        const line = {
+            time: new Date().toISOString(),
+            label,
+            payload
+        };
+
+        document.getElementById("events").textContent +=
+            JSON.stringify(line, null, 2) + "\n\n";
+    }
+
+    function clearLog() {
+        document.getElementById("events").textContent = "";
+    }
+
+    window.addEventListener("error", event => {
+        setStatus(event.message);
+        logEvent("client error", event.message);
+    });
+
+    window.addEventListener("unhandledrejection", event => {
+        const message = event.reason && event.reason.message
+            ? event.reason.message
+            : String(event.reason);
+
+        setStatus(message);
+        logEvent("client promise error", message);
+    });
+</script>
 </body>
 </html>
