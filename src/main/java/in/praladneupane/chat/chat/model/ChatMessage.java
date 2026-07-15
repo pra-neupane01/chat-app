@@ -43,4 +43,27 @@ public class ChatMessage extends BaseEntity {
 
     @Column(name = "read_at")
     private LocalDateTime readAt;
+
+    @Builder.Default
+    @Column(name = "edited", nullable = false)
+    private boolean edited = false;
+
+    @Column(name = "edited_at")
+    private LocalDateTime editedAt;
+
+    @Builder.Default
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "attachment_url")
+    private String attachmentUrl;
+
+    @Column(name = "attachment_file_name")
+    private String attachmentFileName;
+
+    @Column(name = "attachment_content_type")
+    private String attachmentContentType;
+
+    @Column(name = "attachment_size")
+    private Long attachmentSize;
 }
