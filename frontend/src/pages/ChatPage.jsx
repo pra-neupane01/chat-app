@@ -13,6 +13,7 @@ import ConnectionBanner from "../components/messages/ConnectionBanner"
 import MessagePane from "../components/messages/MessagePane"
 import UserSearchModal from "../components/users/UserSearchModal"
 import { useAuth } from "../hooks/useAuth"
+import { useNotifications } from "../hooks/useNotifications"
 import { useToast } from "../hooks/useToast"
 import { useWebSocket, useWebSocketEvent } from "../hooks/useWebSocket"
 import { SOCKET_EVENTS } from "../services/websocketService"
@@ -49,6 +50,12 @@ function upsertConversation(conversations, nextConversation) {
 function ChatPage() {
   const { logout, user } = useAuth()
   const { showToast } = useToast()
+  const {
+    enabled: notificationsEnabled,
+    notify,
+    permission: notificationPermission,
+    toggleNotifications,
+  } = useNotifications()
   const {
     connected,
     connectionState,
@@ -194,6 +201,32 @@ function ChatPage() {
 
     setLiveMessage(message)
     applyMessagePreview(message)
+
+    const incoming = message.receiverId === userRef.current?.id
+    const activeId = activeConversationRef.current?.id
+    const inactiveConversation = message.conversationId !== activeId
+    const pageHidden = document.visibilityState !== "visible"
+
+    if (incoming && (inactiveConversation || pageHidden)) {
+      const conversation = conversationsRef.current.find(
+        (item) => item.id === message.conversationId,
+      )
+      const title =
+        conversation?.otherUser?.fullName ||
+        message.senderName ||
+        "New message"
+      const body = getMessagePreview(message)
+
+      showToast({
+        title,
+        message: body,
+        tone: "info",
+      })
+
+      if (pageHidden || inactiveConversation) {
+        notify({ title, body })
+      }
+    }
   })
 
   useWebSocketEvent(SOCKET_EVENTS.READ_RECEIPT, (receipt) => {
@@ -367,12 +400,15 @@ function ChatPage() {
             error={conversationError}
             loading={loadingConversations}
             onConversationFilterChange={setConversationFilter}
+            onToggleNotifications={toggleNotifications}
             onLogout={logout}
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenUserSearch={() => setUserSearchOpen(true)}
             onRetry={loadConversations}
             onSelectConversation={selectConversation}
             totalUnread={totalUnread}
+            notificationsEnabled={notificationsEnabled}
+            notificationPermission={notificationPermission}
             user={user}
           />
         </div>
