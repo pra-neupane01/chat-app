@@ -41,11 +41,19 @@ public final class ChatMessageMapper {
                 .senderId(chatMessage.getSender().getId())
                 .senderName(chatMessage.getSender().getFullName())
                 .receiverId(chatMessage.getReceiver().getId())
-                .content(chatMessage.getContent())
+                .content(chatMessage.isDeleted() ? null : chatMessage.getContent())
                 .messageType(chatMessage.getMessageType())
                 .messageStatus(chatMessage.getMessageStatus())
                 .sentAt(chatMessage.getSentAt())
                 .readAt(chatMessage.getReadAt())
+                .edited(chatMessage.isEdited())
+                .editedAt(chatMessage.getEditedAt())
+                .deleted(chatMessage.isDeleted())
+                .deletedAt(chatMessage.getDeletedAt())
+                .attachmentUrl(chatMessage.isDeleted() ? null : chatMessage.getAttachmentUrl())
+                .attachmentFileName(chatMessage.isDeleted() ? null : chatMessage.getAttachmentFileName())
+                .attachmentContentType(chatMessage.isDeleted() ? null : chatMessage.getAttachmentContentType())
+                .attachmentSize(chatMessage.isDeleted() ? null : chatMessage.getAttachmentSize())
                 .build();
     }
 }
