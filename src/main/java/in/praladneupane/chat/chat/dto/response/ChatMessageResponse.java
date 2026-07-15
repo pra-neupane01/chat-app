@@ -22,6 +22,14 @@ public record ChatMessageResponse(
         MessageStatus messageStatus,
 
         LocalDateTime sentAt,
-        LocalDateTime readAt
+        LocalDateTime readAt,
+        boolean edited,
+        LocalDateTime editedAt,
+        boolean deleted,
+        LocalDateTime deletedAt,
+        String attachmentUrl,
+        String attachmentFileName,
+        String attachmentContentType,
+        Long attachmentSize
         ) {
 }
