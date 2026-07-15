@@ -36,8 +36,13 @@ function MessageBubble({
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(message.content || "")
   const [saving, setSaving] = useState(false)
-  const canEdit = own && !deleted && message.messageType === "TEXT"
-  const canDelete = own && !deleted
+  const canEdit =
+    own &&
+    !deleted &&
+    !message.pending &&
+    !message.failed &&
+    message.messageType === "TEXT"
+  const canDelete = own && !deleted && !message.pending && !message.failed
 
   async function handleEditSubmit(event) {
     event.preventDefault()
@@ -191,12 +196,20 @@ function MessageBubble({
 
         <div
           className={`mt-1 flex items-center justify-end gap-1 text-[11px] ${
-            own ? "text-ink-900/70" : "text-slate-400"
+            own
+              ? message.failed
+                ? "text-red-900"
+                : "text-ink-900/70"
+              : "text-slate-400"
           }`}
         >
           {message.edited && !deleted ? <span>edited</span> : null}
+          {message.pending ? <span>sending</span> : null}
+          {message.failed ? <span>failed</span> : null}
           <time>{formatMessageTime(message.sentAt)}</time>
-          {own ? <MessageStatus status={message.messageStatus} /> : null}
+          {own && !message.failed ? (
+            <MessageStatus status={message.messageStatus} />
+          ) : null}
         </div>
       </div>
     </div>
