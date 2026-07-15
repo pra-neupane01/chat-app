@@ -5,7 +5,10 @@ import in.praladneupane.chat.chat.model.MessageStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,5 +35,18 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> 
             UUID conversationId,
             UUID receiverId,
             MessageStatus messageStatus
+    );
+
+    @Query("""
+            select message
+            from ChatMessage message
+            where message.conversation.id = :conversationId
+              and (:beforeSentAt is null or message.sentAt < :beforeSentAt)
+            order by message.sentAt desc
+            """)
+    List<ChatMessage> findConversationMessagesBefore(
+            @Param("conversationId") UUID conversationId,
+            @Param("beforeSentAt") LocalDateTime beforeSentAt,
+            Pageable pageable
     );
 }
