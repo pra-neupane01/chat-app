@@ -9,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -17,10 +19,17 @@ public class UserService {
 
     public Page<UserSearchResponse> searchUsers(
             UserSearchRequest searchRequest,
-            Pageable pageable
+            Pageable pageable,
+            UUID authenticatedUserId
     ) {
         return userRepository
-                .findAll(UserSpecification.search(searchRequest), pageable)
+                .findAll(
+                        UserSpecification.search(
+                                searchRequest,
+                                authenticatedUserId
+                        ),
+                        pageable
+                )
                 .map(user -> UserSearchResponse.builder()
                         .id(user.getId())
                         .fullName(user.getFullName())
