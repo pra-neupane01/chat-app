@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/chat-app
-    username: postgres
-    password: 12345
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
@@ -15,7 +15,7 @@ spring:
       hibernate:
         format_sql: true
 server:
-  port: 8082
+  port: 8080
   servlet:
     context-path: /api/v1
 
